@@ -18,7 +18,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=6, decimal_places=2)
     inventory = models.IntegerField()
     last_update = models.DateTimeField()
-    collection = models.ForeignKey(Collection, on_delete=models.PROTECT)
+    collection = models.ForeignKey(Collection, on_delete=models.PROTECT,related_name="products")
     promotion = models.ManyToManyField(Promotion)
 
 
@@ -63,7 +63,7 @@ class CartItem(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.PROTECT)
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT,related_name="orderitems")
     quantity = models.PositiveSmallIntegerField()
     unit_pirce = models.DecimalField(max_digits=6, decimal_places=2)
 
