@@ -2,12 +2,19 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.mixins import ListModelMixin,CreateModelMixin
+from rest_framework.generics import ListCreateAPIView
 from .models import Product, Collection
 from .serializers import ProductSerializer, CollectionSerializer
 from rest_framework import status
 from django.db.models import Count
 
-# Create your views here
+# Create your views here:
+# 1-Function Based
+# 2-Class Based APIView
+# 3-mixins - generic APIViews
+# 4-Viewset
+
 
 #Class_Based_View
 class ProductList(APIView):
@@ -121,3 +128,7 @@ def collection_detail(request, id):
                 {"Message": "The collection had been deleted successfully"},
                 status=status.HTTP_204_NO_CONTENT,
             )
+
+class CollectionList(ListCreateAPIView):
+    queryset = Collection.objects.annotate(products_count=Count("products")).all()
+    serializer_class = CollectionSerializer
