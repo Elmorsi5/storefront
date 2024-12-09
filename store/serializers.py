@@ -6,19 +6,28 @@ from decimal import Decimal
 class CollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
-        fields = ['id','title','products_count']
-    
+        fields = ["id", "title", "products_count"]
+
     products_count = serializers.IntegerField()
 
-    
-    def counting(self,collection:Collection):
+    def counting(self, collection: Collection):
         numbeers = Collection.products.count()
         return numbeers
+
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ["id", "title", 'description',"price",'slug','inventory', "price_with_tax", "collection"]
+        fields = [
+            "id",
+            "title",
+            "description",
+            "price",
+            "slug",
+            "inventory",
+            "price_with_tax",
+            "collection",
+        ]
 
     price_with_tax = serializers.SerializerMethodField(method_name="calculate_tax")
     # collection = serializers.HyperlinkedRelatedField(
