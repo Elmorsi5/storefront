@@ -2,8 +2,9 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.mixins import ListModelMixin,CreateModelMixin
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.mixins import ListModelMixin, CreateModelMixin
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.viewsets import ModelViewSet
 from .models import Product, Collection
 from .serializers import ProductSerializer, CollectionSerializer
 from rest_framework import status
@@ -16,49 +17,10 @@ from django.db.models import Count
 # 4-Viewset
 
 
-#Class_Based_View
-class ProductList(APIView):
-    def get(self, request):
-        queryset = Product.objects.select_related("collection").all()
-        serializer = ProductSerializer(
-            queryset, many=True, context={"request": request}
-        )
-        return Response(serializer.data)
-    
-    def post(self,request):
-        serializer = ProductSerializer(data = request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data,status= status.HTTP_201_CREATED)
+# 1- Fucnction_Based_View
+#-------------------------
 
-class ProductDetail(APIView):
-    def get(self,request,id):
-        product = get_object_or_404(Product,pk = id)
-        serializer = ProductSerializer(product)
-        return Response(serializer.data)
-    
-    def post(self,request,id):
-        product = get_object_or_404(Product,pk =id)
-        serializer = ProductSerializer(data = request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data,status=status.HTTP_201_CREATED)
-
-    def delete(self,request,id):
-        product = get_object_or_404(Product,pk = id)
-        if product.oerderitems.count()>0:
-            product.delete()
-            return Response({'error':"The Product had been deleted successfully"})
-    
-
-
-
-
-
-
-
-
-#Fucnction_Based_View
+# 1.1 Products
 @api_view(["GET", "POST"])
 def product_list(request):
     if request.method == "GET":
@@ -94,7 +56,7 @@ def product_detail(request, id):
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
+# 1.1 collections
 @api_view(["GET", "POST"])
 def collection_list(request):
     if request.method == "GET":
@@ -129,6 +91,81 @@ def collection_detail(request, id):
                 status=status.HTTP_204_NO_CONTENT,
             )
 
+# ----------------------
+
+# 2- Class_Based_View
+# ----------------------
+
+# 2.1 Products
+class ProductList(APIView):
+    def get(self, request):
+        queryset = Product.objects.select_related("collection").all()
+        serializer = ProductSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = ProductSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ProductDetail(APIView):
+    def get(self, request, id):
+        product = get_object_or_404(Product, pk=id)
+        serializer = ProductSerializer(product)
+        return Response(serializer.data)
+
+    def post(self, request, id):
+        product = get_object_or_404(Product, pk=id)
+        serializer = ProductSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, id):
+        product = get_object_or_404(Product, pk=id)
+        if product.oerderitems.count() > 0:
+            product.delete()
+            return Response({"error": "The Product had been deleted successfully"})
+
+
+# 3-Generic view - Mixins
+# -----------------------
+
+#3.1 Collection
 class CollectionList(ListCreateAPIView):
     queryset = Collection.objects.annotate(products_count=Count("products")).all()
     serializer_class = CollectionSerializer
+
+
+class CollectionDetail(RetrieveUpdateDestroyAPIView):
+    queryset = Collection.objects.annotate(products_count=Count("products")).all()
+    serializer_class = CollectionSerializer
+
+    def delete(self, request, id):
+        collection = get_object_or_404(self.queryset, pk=id)
+        if collection.products.count() > 0:  # type: ignore
+            return Response(
+                {
+                    "error": "There are products related to this collectio, you can not delete it"
+                },
+                status.HTTP_405_METHOD_NOT_ALLOWED,
+            )
+        else:
+            collection.delete()
+            return Response(status.HTTP_404_NOT_FOUND)
+
+# --------------------------------------
+
+# 4- viewsets:
+#------------
+# 4.1 Product
+class ProductViewSet(ModelViewSet):
+    queryset = Product.objects.all().select_related("collection")
+    serializer_class = ProductSerializer
+
+    def get_serializer_context(self):
+        return {"request": self.request}
