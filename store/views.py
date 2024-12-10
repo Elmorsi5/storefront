@@ -18,7 +18,8 @@ from django.db.models import Count
 
 
 # 1- Fucnction_Based_View
-#-------------------------
+# -------------------------
+
 
 # 1.1 Products
 @api_view(["GET", "POST"])
@@ -56,6 +57,7 @@ def product_detail(request, id):
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 # 1.1 collections
 @api_view(["GET", "POST"])
 def collection_list(request):
@@ -91,10 +93,12 @@ def collection_detail(request, id):
                 status=status.HTTP_204_NO_CONTENT,
             )
 
+
 # ----------------------
 
 # 2- Class_Based_View
 # ----------------------
+
 
 # 2.1 Products
 class ProductList(APIView):
@@ -134,8 +138,22 @@ class ProductDetail(APIView):
 
 # 3-Generic view - Mixins
 # -----------------------
+class ProducViewset(ModelViewSet):
+    query = Product.objects.all()
+    serializer_class = ProductSerializer
 
-#3.1 Collection
+    def get_serializer_context(self):
+        return {"request": self.request}
+
+    def delete(self, request, pk):
+        product = get_object_or_404(Product, pk=pk)
+        if product.orderitems.count() > 0:
+            product.delete()
+            return Response({"Error": "Product can't be deleted"})
+        product.delete()
+
+
+# 3.2 Collection
 class CollectionList(ListCreateAPIView):
     queryset = Collection.objects.annotate(products_count=Count("products")).all()
     serializer_class = CollectionSerializer
@@ -158,10 +176,12 @@ class CollectionDetail(RetrieveUpdateDestroyAPIView):
             collection.delete()
             return Response(status.HTTP_404_NOT_FOUND)
 
+
 # --------------------------------------
 
+
 # 4- viewsets:
-#------------
+# ------------
 # 4.1 Product
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all().select_related("collection")
