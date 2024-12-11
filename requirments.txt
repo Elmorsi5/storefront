@@ -1,3 +1,5 @@
 django
 django-debug-toolbar
 djangorestframework
+drf-nested-routers
+

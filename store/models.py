@@ -84,8 +84,7 @@ class Adress(models.Model):
 
 
 class Review(models.Model):
-    Product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name="reviews")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name="reviews")
     name = models.CharField(max_length=255)
     description = models.TextField()
     date = models.DateField(auto_now_add=True)
-    
