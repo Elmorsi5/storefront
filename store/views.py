@@ -1,10 +1,13 @@
 from django.shortcuts import render, get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.mixins import ListModelMixin, CreateModelMixin
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.viewsets import ModelViewSet
+
+from store.filters import ProductFilter
 from .models import OrderItem, Product, Collection, Review
 from .serializers import ProductSerializer, CollectionSerializer, ReviewSerializer
 from rest_framework import status
@@ -173,6 +176,8 @@ class CollectionDetail(RetrieveUpdateDestroyAPIView):
 class ProducViewset(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProductFilter
 
     def get_serializer_context(self):
         return {"request": self.request}
@@ -187,6 +192,7 @@ class ProducViewset(ModelViewSet):
 class CollectionViewset(ModelViewSet):
     queryset = Collection.objects.annotate(product_count=Count("products")).all()
     serializer_class = CollectionSerializer
+    
 
     def get_serializer_context(self):
         return {"request": self.request}

@@ -10,10 +10,10 @@ router.register("products",views.ProducViewset,basename="products")
 router.register("collections",views.CollectionViewset,basename="collections")
 
 #2.Create the Nested
-product_router = routers.NestedDefaultRouter(router,'products',lookup = 'product')
+products_router = routers.NestedDefaultRouter(router,'products',lookup = 'product')
 
 #3. Register the Child
-product_router.register('reviews',views.ReviewViewset,basename='product-reviews')
+products_router.register('reviews',views.ReviewViewset,basename='product-reviews')
 
 urlpatterns= [
     # #class_Based:
@@ -26,6 +26,6 @@ urlpatterns= [
     # path('collection/<int:id>',views.collection_detail,name='collection-detail'),
     # #ViewSets
     path(r'',include(router.urls)),
-    path(r"",include(product_router.urls))
+    path(r"",include(products_router.urls))
 
 ]
